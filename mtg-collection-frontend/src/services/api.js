@@ -45,6 +45,30 @@ export default {
     // payload: { card_id (e.g. scryfall_id), quantity, condition, is_foil, ... }
     // Example: POST /api/users/me/collection
   return apiClient.post('/collection/cards/', payload); // Matches backend route
+  },
+
+  // --- Deck Management ---
+  async createDeck(deckData) {
+    // deckData: { name: string, description?: string, format?: string }
+    return apiClient.post('/decks/', deckData);
+  },
+
+  async getUserDecks() {
+    return apiClient.get('/decks/');
+  },
+
+  async getDeckDetails(deckId) {
+    return apiClient.get(`/decks/${deckId}/`);
+  },
+
+  async addCardToDeck(deckId, cardData) {
+    // cardData: { card_definition_scryfall_id: string, quantity: int, is_commander?: bool, is_sideboard?: bool }
+    return apiClient.post(`/decks/${deckId}/cards/`, cardData);
+  },
+
+  async register(userData) {
+    // userData: { username, email, password }
+    return apiClient.post('/users/', userData);
   }
   // You can add other API calls here (e.g., register, updateCollectionItem, deleteCollectionItem)
 };

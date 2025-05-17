@@ -23,6 +23,19 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/decks',
+    name: 'DecksList',
+    component: () => import('../views/DecksListPage.vue'), // Lazy load component
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/decks/:deckId', // Dynamic segment for deck ID
+    name: 'DeckDetail',
+    component: () => import('../views/DeckDetailPage.vue'), // Lazy load component
+    meta: { requiresAuth: true },
+    props: true, // Automatically pass route params as props to the component
+  },
+  {
     path: '/',
     redirect: () => {
       if (!authStore.getToken()) {
