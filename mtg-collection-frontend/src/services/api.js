@@ -1,0 +1,50 @@
+import axios from 'axios';
+import authStore from '../store/auth';
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000', // Your FastAPI backend URL
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Interceptor to add the auth token to requests
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = authStore.getToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export default {
+  login(credentials) {
+    // FastAPI's OAuth2PasswordRequestForm expects form data
+    return apiClient.post('/auth/token', credentials, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} });
+  },
+
+  async searchCards(query) {
+    // The actual endpoint might be /api/cards/search, /api/v1/cards/search or similar,
+    // ensure this matches your backend route for searching cards from the main database.
+    // Example: GET /api/cards/search?name=:cardName
+    return apiClient.get(`/cards/search?name=${encodeURIComponent(query)}`);
+  },
+
+  async getUserCollection() {
+    // Endpoint to get the logged-in user's collection.
+    // Example: GET /api/users/me/collection
+  return apiClient.get('/collection/cards/'); // Matches backend route
+  },
+
+  async addCardToCollection(payload) {
+    // Endpoint to add a card to the user's collection
+    // payload: { card_id (e.g. scryfall_id), quantity, condition, is_foil, ... }
+    // Example: POST /api/users/me/collection
+  return apiClient.post('/collection/cards/', payload); // Matches backend route
+  }
+  // You can add other API calls here (e.g., register, updateCollectionItem, deleteCollectionItem)
+};
