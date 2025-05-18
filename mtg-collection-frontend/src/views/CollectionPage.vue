@@ -49,14 +49,20 @@
       <p>Your collection is empty. Use the search above to find and add cards!</p>
     </div>
     <div v-else-if="!isLoadingCollection && userCollection.length > 0 && !userCollectionError" class="collection-grid">
-      <div v-for="item in userCollection" :key="item.id" class="collection-item">
-        <!-- Display your collected card details here. Adjust 'item' properties based on your API response -->
-        <img :src="getCardImageUrl(item.card_definition)" :alt="item.card_definition?.name || 'Card Image'" class="collection-card-image"/>
+      <div v-for="item in userCollection" :key="item.id" class="collection-item hover-image-container">
         <p class="card-name"><strong>{{ item.card_definition?.name || 'Unknown Card' }}</strong></p>
         <p class="card-detail" v-if="item.quantity_normal > 0">Quantity (Normal): {{ item.quantity_normal }}</p>
         <p class="card-detail" v-if="item.quantity_foil > 0">Quantity (Foil): {{ item.quantity_foil }}</p>
         <p class="card-detail">Condition: {{ item.condition }}</p>
-        <!-- You might want a button to edit/remove items here in the future -->
+        <!-- Image only appears on hover -->
+        <div class="hover-image">
+          <img
+            :src="getCardImageUrl(item.card_definition)"
+            :alt="item.card_definition?.name || 'Card Image'"
+            class="collection-card-image"
+            @error="event => event.target.src = defaultCardImage"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -80,7 +86,7 @@ const addDetails = ref({
 const addCardError = ref('');
 const isAddingCard = ref(false);
 const userCollectionError = ref(''); // For displaying errors when fetching collection
-const defaultCardImage = 'https://via.placeholder.com/100x140.png?text=No+Image'; // Placeholder
+const defaultCardImage = 'https://via.placeholder.com/150x210.png?text=No+Image';
 
 const fetchUserCollection = async () => {
   isLoadingCollection.value = true;
@@ -100,26 +106,19 @@ const fetchUserCollection = async () => {
 // Helper to construct full image URL
 const getCardImageUrl = (cardDefinition) => {
   if (!cardDefinition) return defaultCardImage;
-
-  // Option 1: If your API provides a direct relative path for a locally served image
-  // (e.g., in cardDefinition.local_image_url_small or even cardDefinition.image_uris.small if it's relative)
-  const localRelativePath = cardDefinition.local_image_url_small || cardDefinition.image_uris?.small; // Adjust field based on your API structure
-
+  // Try local image first
+  const localRelativePath = cardDefinition.local_image_url_small || cardDefinition.image_uris?.small;
   if (localRelativePath) {
     if (localRelativePath.startsWith('http://') || localRelativePath.startsWith('https://')) {
-      return localRelativePath; // It's already an absolute URL
+      return localRelativePath;
     }
-    // Construct full URL for relative path from your API
-    const baseUrl = api.defaults.baseURL.replace(/\/$/, ''); // Remove any trailing slash from API base URL
-    const path = localRelativePath.startsWith('/') ? localRelativePath : `/${localRelativePath}`; // Ensure leading slash for path
+    // If it's a relative path, prepend your API base URL
+    const baseUrl = api.defaults.baseURL?.replace(/\/$/, '') || '';
+    const path = localRelativePath.startsWith('/') ? localRelativePath : `/${localRelativePath}`;
     return `${baseUrl}${path}`;
   }
-
-  // Option 2: Fallback to a Scryfall direct image URL if available and no local path
-  // This line might be redundant if image_uris.small was already checked above and was a Scryfall URL.
-  // if (cardDefinition.image_uris?.small) return cardDefinition.image_uris.small;
-
-  return defaultCardImage; // Default placeholder if no image found
+  // Fallback to placeholder
+  return defaultCardImage;
 };
 
 const handleCardSelectedForAddition = (card) => {
@@ -189,7 +188,7 @@ onMounted(() => {
   gap: 20px;
   margin-top: 20px;
 }
-.collection-item { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.collection-item { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
 .collection-card-image { max-width: 100%; height: auto; border-radius: 6px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
 .collection-item p { margin: 5px 0; font-size: 0.9em; }
 .collection-item strong { font-size: 1em; }
@@ -198,5 +197,23 @@ onMounted(() => {
 }
 .collection-item .card-detail {
   color: #555555; /* Medium-dark color for details */
+}
+.hover-image-container {
+  position: relative;
+}
+.hover-image {
+  display: none;
+  position: absolute;
+  top: 10px;
+  left: 110%;
+  z-index: 10;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 5px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.hover-image-container:hover .hover-image {
+  display: block;
 }
 </style>

@@ -32,14 +32,17 @@
         <div v-if="viewedDeck.category === 'Commander' && viewedDeck.commander">
           <p><strong>Commander:</strong> {{ viewedDeck.commander.name }} ({{ viewedDeck.commander.color_identity?.join(',') }})</p>
         </div>
-        <ul>
-          <li v-for="(card, idx) in viewedDeck.cards" :key="idx">
-            {{ card.name }}
-            <span v-if="card.color_identity && card.color_identity.length">
-              ({{ card.color_identity.join(',') }})
-            </span>
-          </li>
-        </ul>
+        <div v-for="(cards, type) in groupedAndSortedCards(viewedDeck)" :key="type" style="margin-bottom: 1em;">
+          <h3>{{ type }}</h3>
+          <ul>
+            <li v-for="(card, idx) in cards" :key="idx">
+              {{ card.name }}
+              <span v-if="card.color_identity && card.color_identity.length">
+                ({{ card.color_identity.join(',') }})
+              </span>
+            </li>
+          </ul>
+        </div>
         <button @click="closeViewDeck">Close</button>
       </div>
     </div>
@@ -83,6 +86,20 @@ const selectedDeck = ref(null);
 const viewedDeck = ref(null);
 
 const selectedCard = ref(null);
+
+// Suppose you have access to userCollection (array of scryfall_ids or card names)
+const userCollectionIds = new Set(userCollection.map(c => c.card_definition_scryfall_id));
+
+// When you get search results:
+function sortSearchResults(results) {
+  results.sort((a, b) => {
+    const aInCollection = userCollectionIds.has(a.scryfall_id);
+    const bInCollection = userCollectionIds.has(b.scryfall_id);
+    if (aInCollection && !bInCollection) return -1;
+    if (!aInCollection && bInCollection) return 1;
+    return a.name.localeCompare(b.name); // fallback: alphabetical
+  });
+}
 
 function createDeck() {
   const deck = {
@@ -141,6 +158,22 @@ function addCardToDeck() {
   selectedDeck.value.cards.push(selectedCard.value);
   selectedCard.value = null;
 }
+
+const groupedAndSortedCards = (deck) => {
+  if (!deck || !deck.cards) return {};
+  // Group by main type (first word in type_line, e.g., "Creature")
+  const groups = {};
+  deck.cards.forEach(card => {
+    const type = card.type_line ? card.type_line.split('—')[0].trim().split(' ')[0] : 'Other';
+    if (!groups[type]) groups[type] = [];
+    groups[type].push(card);
+  });
+  // Sort each group alphabetically
+  Object.keys(groups).forEach(type => {
+    groups[type].sort((a, b) => a.name.localeCompare(b.name));
+  });
+  return groups;
+};
 
 const showCommanderPrompt = computed(() =>
   selectedDeck.value &&
