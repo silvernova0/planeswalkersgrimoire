@@ -136,7 +136,7 @@ const filters = ref({
   set: '',
   type: '',
   colors: [],
-  language: 'en', // default to English
+  language: '', // show all by default
 });
 
 const mainTypes = [

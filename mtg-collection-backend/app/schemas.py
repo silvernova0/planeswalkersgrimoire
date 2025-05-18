@@ -67,7 +67,7 @@ class UserCollectionEntry(UserCollectionEntryBase): # For returning a collection
     card_definition_id: int # The ID of the CardDefinition
     date_added_to_collection: datetime
     date_updated_in_collection: Optional[datetime] = None
-    card_definition: CardDefinition # Nested card definition details
+    card_definition: Optional[CardDefinition] = None # Nested card definition details
 
     class Config:
         from_attributes = True
@@ -111,7 +111,7 @@ class DeckEntryUpdate(BaseModel):
 class DeckEntry(DeckEntryBase): # For returning a deck entry
     id: int
     deck_id: int
-    card_definition: CardDefinition # Nested card definition details
+    card_definition: Optional[CardDefinition] = None # Nested card definition details
 
     class Config:
         from_attributes = True
