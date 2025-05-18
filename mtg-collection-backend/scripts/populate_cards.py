@@ -11,13 +11,16 @@ sys.path.insert(0, project_root)
 import httpx # Moved import to top level
 
 from sqlalchemy.ext.asyncio import AsyncSession
+# Removed Column, String, Integer, Boolean, JSON, Float, JSONB, ARRAY as local model is removed
+
 
 # You'll need to set up access to your database session and CRUD operations
 # This might involve importing from your main app's modules
 # For simplicity, assuming you can get a db session and access CRUD
 from app.database import AsyncSessionLocal, Base, engine # Adjust imports as needed
-from app.models import CardDefinition as CardDefinitionModel # Alias to avoid confusion
-from app.crud import get_card_definition_by_scryfall_id # create_card_definition no longer used directly here
+from app.models import CardDefinition as CardDefinitionModel
+from app.crud import get_card_definition_by_scryfall_id # Import the CRUD function
+
 
 # URL for a Scryfall bulk data file (e.g., Oracle Cards or All Cards)
 # Get the latest download URI from https://api.scryfall.com/bulk-data
@@ -52,13 +55,50 @@ async def process_card_data(db: AsyncSession, card_data: dict, image_client: htt
 
     if card_to_process:
         print(f"Card {scryfall_id} ({card_name_from_bulk}) already exists. Checking for updates...")
-        # Update existing card's attributes
+        # Update existing card's attributes - make this comprehensive
         card_to_process.name = card_name_from_bulk
         card_to_process.set_code = card_data.get("set")
         card_to_process.collector_number = card_data.get("collector_number")
         card_to_process.legalities = card_data.get("legalities")
         card_to_process.type_line = card_data.get("type_line")
-        
+        card_to_process.mana_cost = card_data.get("mana_cost")
+        card_to_process.color_identity = card_data.get("color_identity")
+        card_to_process.lang = card_data.get("lang", "en")
+        card_to_process.type_line = card_data.get("type_line")
+        card_to_process.mana_cost = card_data.get("mana_cost")
+        card_to_process.cmc = card_data.get("cmc")
+        card_to_process.keywords = card_data.get("keywords")
+        card_to_process.rarity = card_data.get("rarity")
+        card_to_process.artist = card_data.get("artist")
+        card_to_process.released_at = card_data.get("released_at")
+        card_to_process.set_name = card_data.get("set_name")
+        card_to_process.layout = card_data.get("layout")
+        card_to_process.frame = card_data.get("frame")
+        card_to_process.border_color = card_data.get("border_color")
+        card_to_process.full_art = card_data.get("full_art")
+        card_to_process.textless = card_data.get("textless")
+        card_to_process.reprint = card_data.get("reprint")
+        card_to_process.promo = card_data.get("promo")
+        card_to_process.digital = card_data.get("digital")
+        card_to_process.foil = card_data.get("foil")
+        card_to_process.nonfoil = card_data.get("nonfoil")
+        card_to_process.oversized = card_data.get("oversized")
+        card_to_process.story_spotlight = card_data.get("story_spotlight")
+        card_to_process.edhrec_rank = card_data.get("edhrec_rank")
+        card_to_process.prices = card_data.get("prices")
+        card_to_process.card_faces = card_data.get("card_faces")
+        card_to_process.all_parts = card_data.get("all_parts")
+        card_to_process.purchase_uris = card_data.get("purchase_uris")
+        card_to_process.related_uris = card_data.get("related_uris")
+        card_to_process.scryfall_uri = card_data.get("scryfall_uri")
+        card_to_process.rulings_uri = card_data.get("rulings_uri")
+        card_to_process.prints_search_uri = card_data.get("prints_search_uri")
+        card_to_process.oracle_text = card_data.get("oracle_text")
+        card_to_process.flavor_text = card_data.get("flavor_text")
+        card_to_process.power = card_data.get("power")
+        card_to_process.toughness = card_data.get("toughness")
+        card_to_process.loyalty = card_data.get("loyalty")
+        card_to_process.colors = card_data.get("colors")
         card_to_process.image_uri_small = image_uris.get("small")
         card_to_process.image_uri_normal = image_uris.get("normal")
         card_to_process.image_uri_large = image_uris.get("large")
@@ -74,17 +114,51 @@ async def process_card_data(db: AsyncSession, card_data: dict, image_client: htt
             "scryfall_id": scryfall_id,
             "name": card_name_from_bulk,
             "set_code": card_data.get("set"),
+            "lang": card_data.get("lang", "en"), # Default to 'en' if not present
             "collector_number": card_data.get("collector_number"),
-            "legalities": card_data.get("legalities"),
             "type_line": card_data.get("type_line"),
+            "mana_cost": card_data.get("mana_cost"),
+            "cmc": card_data.get("cmc"),
+            "oracle_text": card_data.get("oracle_text"),
+            "flavor_text": card_data.get("flavor_text"),
+            "power": card_data.get("power"),
+            "toughness": card_data.get("toughness"),
+            "loyalty": card_data.get("loyalty"),
+            "colors": card_data.get("colors"),
+            "color_identity": card_data.get("color_identity"),
+            "keywords": card_data.get("keywords"),
+            "rarity": card_data.get("rarity"),
+            "artist": card_data.get("artist"),
+            "released_at": card_data.get("released_at"),
+            "set_name": card_data.get("set_name"),
+            "layout": card_data.get("layout"),
+            "frame": card_data.get("frame"),
+            "border_color": card_data.get("border_color"),
+            "full_art": card_data.get("full_art"),
+            "textless": card_data.get("textless"),
+            "reprint": card_data.get("reprint"),
+            "promo": card_data.get("promo"),
+            "digital": card_data.get("digital"),
+            "foil": card_data.get("foil"), # Scryfall field indicates if foil version exists
+            "nonfoil": card_data.get("nonfoil"), # Scryfall field indicates if nonfoil version exists
+            "oversized": card_data.get("oversized"),
+            "story_spotlight": card_data.get("story_spotlight"),
+            "edhrec_rank": card_data.get("edhrec_rank"),
+            "legalities": card_data.get("legalities"),
+            "prices": card_data.get("prices"),
+            "card_faces": card_data.get("card_faces"),
+            "all_parts": card_data.get("all_parts"),
+            "purchase_uris": card_data.get("purchase_uris"),
+            "related_uris": card_data.get("related_uris"),
             "image_uri_small": image_uris.get("small"),
             "image_uri_normal": image_uris.get("normal"),
             "image_uri_large": image_uris.get("large"),
             "image_uri_art_crop": image_uris.get("art_crop"),
             "image_uri_border_crop": image_uris.get("border_crop"),
-            "image_data_small": None,
-            "image_data_normal": None,
-            "image_data_large": None,
+            "scryfall_uri": card_data.get("scryfall_uri"),
+            "card_faces": card_data.get("card_faces"),
+            "rulings_uri": card_data.get("rulings_uri"),
+            "prints_search_uri": card_data.get("prints_search_uri"),
         }
         try:
             card_to_process = CardDefinitionModel(**card_model_data_for_new)
@@ -184,31 +258,48 @@ async def main_populate():
                 for i in range(0, len(all_cards_data), concurrency_factor):
                     current_batch_all_cards = all_cards_data[i:i + concurrency_factor]
                     
-                    # Filter this batch for "Lightning Bolt" cards
-                    lightning_bolt_batch = [
-                        card_data for card_data in current_batch_all_cards
-                        if card_data.get("name") == "Lightning Bolt"
-                    ]
+                    # --- IMPORTANT: "Lightning Bolt" Filter ---
+                    # The following lines filter to ONLY process "Lightning Bolt".
+                    # If you want to process ALL cards, remove or comment out this filter
+                    # and use `current_batch_all_cards` directly in the tasks.
+                    #
+                    # Example: To process all cards, change:
+                    #   `lightning_bolt_batch = [...]`
+                    #   `if not lightning_bolt_batch: continue`
+                    #   `tasks = [process_card_data(session, card_data, image_download_client) for card_data in lightning_bolt_batch]`
+                    #   `processed_count_in_batch = len(lightning_bolt_batch)`
+                    # TO:
+                    #   `batch_to_process = current_batch_all_cards`
+                    #   `if not batch_to_process: continue`
+                    #   `tasks = [process_card_data(session, card_data, image_download_client) for card_data in batch_to_process]`
+                    #   `processed_count_in_batch = len(batch_to_process)`
+                    # And adjust print statements accordingly.
+                    # For now, keeping the "Lightning Bolt" filter as it was in your original script.
+
+                    batch_to_process = current_batch_all_cards # Default to all cards in batch
+                    # batch_to_process = [ # Uncomment this block to filter for "Lightning Bolt"
+                    #     card_data for card_data in current_batch_all_cards
+                    #     if card_data.get("name") == "Lightning Bolt"
+                    # ]
 
                     total_scanned_so_far = i + len(current_batch_all_cards)
 
-                    if not lightning_bolt_batch:
-                        print(f"Scanned batch up to card {total_scanned_so_far}/{len(all_cards_data)}. No 'Lightning Bolt' found in this specific segment.")
+                    if not batch_to_process: # If filtering resulted in an empty batch
+                        print(f"Scanned batch up to card {total_scanned_so_far}/{len(all_cards_data)}. No cards to process in this segment (check filters).")
                         continue # Move to the next segment of the bulk data
 
-                    print(f"Found {len(lightning_bolt_batch)} 'Lightning Bolt' card(s) in current batch segment. Processing them...")
-                    # Pass the image_download_client and only the filtered Lightning Bolt cards
-                    tasks = [process_card_data(session, card_data, image_download_client) for card_data in lightning_bolt_batch]
-                    
+                    print(f"Processing {len(batch_to_process)} card(s) in current batch segment...")
+                    tasks = [process_card_data(session, card_data, image_download_client) for card_data in batch_to_process]
+                                        
                     # Process a batch of cards concurrently
                     await asyncio.gather(*tasks)
                     
-                    processed_count_in_batch = len(lightning_bolt_batch) # Number of Lightning Bolts processed
+                    processed_count_in_batch = len(batch_to_process)
                     processed_count_since_last_commit += processed_count_in_batch
-                    print(f"Processed {processed_count_in_batch} 'Lightning Bolt' card(s). Total cards scanned from bulk: {total_scanned_so_far}/{len(all_cards_data)}")
+                    print(f"Processed {processed_count_in_batch} card(s). Total cards scanned from bulk: {total_scanned_so_far}/{len(all_cards_data)}")
 
                     if processed_count_since_last_commit >= commit_batch_size:
-                        print(f"Committing {processed_count_since_last_commit} 'Lightning Bolt' records...")
+                        print(f"Committing {processed_count_since_last_commit} records...")
                         await session.commit()
                         print("Batch committed.")
                         processed_count_since_last_commit = 0
@@ -217,7 +308,7 @@ async def main_populate():
                 # but the 'finally' block for session.close() is not strictly needed
                 # due to the 'async with AsyncSessionLocal() as session:' context manager.
                 if processed_count_since_last_commit > 0: # Commit any remaining cards
-                    print(f"Committing final {processed_count_since_last_commit} 'Lightning Bolt' records...")
+                    print(f"Committing final {processed_count_since_last_commit} records...")
                     await session.commit()
                     print("Final commit complete.")
             except Exception as e:

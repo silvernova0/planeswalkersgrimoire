@@ -1,5 +1,6 @@
 # app/models.py
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON, LargeBinary
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON, LargeBinary, Float
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB # For PostgreSQL specific types
 from sqlalchemy.sql import func # For server-side default timestamp
 from sqlalchemy.orm import relationship
 from .database import Base
@@ -25,20 +26,56 @@ class CardDefinition(Base): # Renamed from Card
     name = Column(String, index=True)
     set_code = Column(String)
     collector_number = Column(String)
+    lang = Column(String, default="en", nullable=True) # Language of the card print
     type_line = Column(String, index=True, nullable=True) # Added for searching by type
-    legalities = Column(JSON, nullable=True) # To store format legalities e.g. {"standard": "legal", "commander": "legal"}
+    mana_cost = Column(String, nullable=True)
+    cmc = Column(Float, nullable=True)
+    oracle_text = Column(String, nullable=True)
+    flavor_text = Column(String, nullable=True)
+    power = Column(String, nullable=True)
+    toughness = Column(String, nullable=True)
+    loyalty = Column(String, nullable=True)
+    colors = Column(ARRAY(String), nullable=True) # Colors in the mana cost
+    color_identity = Column(ARRAY(String), nullable=True) # e.g., ['W','U','B','R','G']
+    keywords = Column(ARRAY(String), nullable=True) # e.g., ["Flying", "Trample"]
+    rarity = Column(String, nullable=True) # e.g., "common", "uncommon", "rare", "mythic"
+    artist = Column(String, nullable=True)
+    released_at = Column(String, nullable=True) # Date string, e.g., "2023-10-30"
+    set_name = Column(String, nullable=True) # Full name of the set
+    layout = Column(String, nullable=True) # e.g., "normal", "split", "transform"
+    frame = Column(String, nullable=True) # e.g., "2015", "1997"
+    border_color = Column(String, nullable=True) # e.g., "black", "white"
+    full_art = Column(Boolean, nullable=True)
+    textless = Column(Boolean, nullable=True)
+    reprint = Column(Boolean, nullable=True)
+    promo = Column(Boolean, nullable=True)
+    digital = Column(Boolean, nullable=True) # Is it a digital-only card (e.g., Arena)
+    foil = Column(Boolean, nullable=True) # Does this specific printing exist in foil
+    nonfoil = Column(Boolean, nullable=True) # Does this specific printing exist in nonfoil
+    oversized = Column(Boolean, nullable=True)
+    story_spotlight = Column(Boolean, nullable=True)
+    edhrec_rank = Column(Integer, nullable=True)
+
+    legalities = Column(JSONB, nullable=True) # To store format legalities e.g. {"standard": "legal", "commander": "legal"}
+    prices = Column(JSONB, nullable=True) # e.g. {"usd": "0.10", "usd_foil": "0.50"}
+    card_faces = Column(JSONB, nullable=True) # For multi-faced cards
+    all_parts = Column(JSONB, nullable=True) # Related card objects (tokens, meld parts)
+    purchase_uris = Column(JSONB, nullable=True) # Links to buy the card
+    related_uris = Column(JSONB, nullable=True) # Links to Gatherer, TCGplayer, etc.
+
     image_uri_small = Column(String, nullable=True)
     image_uri_normal = Column(String, nullable=True)
     image_uri_large = Column(String, nullable=True)
     image_uri_art_crop = Column(String, nullable=True)
     image_uri_border_crop = Column(String, nullable=True)
-        # New columns for storing raw image data
+    scryfall_uri = Column(String, nullable=True) # Link to the card on Scryfall
+    rulings_uri = Column(String, nullable=True) # Link to Scryfall rulings API
+    prints_search_uri = Column(String, nullable=True) # Link to Scryfall API for all prints of this card
+
+    # Columns for storing raw image data (already present)
     image_data_small = Column(LargeBinary, nullable=True)
     image_data_normal = Column(LargeBinary, nullable=True)
     image_data_large = Column(LargeBinary, nullable=True)
-
-    # color_identity = Column(String, nullable=True) # e.g., "W,U,B,R,G"
-    # rarity = Column(String, nullable=True)
 
     date_added = Column(DateTime(timezone=True), server_default=func.now())
     date_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())

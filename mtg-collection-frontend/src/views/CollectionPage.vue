@@ -94,7 +94,8 @@ const fetchUserCollection = async () => {
     userCollectionError.value = 'Failed to load your collection. Please try refreshing the page or try again later.';
   } finally {
     isLoadingCollection.value = false;
-    };
+  }
+};
 
 // Helper to construct full image URL
 const getCardImageUrl = (cardDefinition) => {
@@ -119,7 +120,6 @@ const getCardImageUrl = (cardDefinition) => {
   // if (cardDefinition.image_uris?.small) return cardDefinition.image_uris.small;
 
   return defaultCardImage; // Default placeholder if no image found
-  }
 };
 
 const handleCardSelectedForAddition = (card) => {
@@ -161,10 +161,7 @@ const cancelAddCard = () => {
 };
 
 onMounted(() => {
-  // Fetch collection when component mounts, if user is authenticated
-  if (authStore.token) { // Or however you check authentication status
-    fetchUserCollection();
-  }
+  fetchUserCollection();
 });
 </script>
 
@@ -186,7 +183,12 @@ onMounted(() => {
 .modal-actions button[type="submit"] { background-color: #28a745; color: white; }
 .modal-actions button[type="button"] { background-color: #6c757d; color: white; }
 
-.collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 5 columns */
+  gap: 20px;
+  margin-top: 20px;
+}
 .collection-item { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 .collection-card-image { max-width: 100%; height: auto; border-radius: 6px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
 .collection-item p { margin: 5px 0; font-size: 0.9em; }

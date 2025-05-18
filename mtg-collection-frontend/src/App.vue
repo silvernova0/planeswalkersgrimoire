@@ -16,7 +16,7 @@ body {
   /* If your image is in public/images/background.png */
   /* background-image: url('/images/background.png'); */
 
-  background-size: cover; /* Cover the entire page */
+  background-size: 100% 100%; /* Stretch to cover entire page */
   background-position: center center; /* Center the image */
   background-repeat: no-repeat; /* Do not repeat the image */
   background-attachment: fixed; /* Keep the background fixed during scroll */
