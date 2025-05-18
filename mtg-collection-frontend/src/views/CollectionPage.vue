@@ -49,28 +49,31 @@
       <p>Your collection is empty. Use the search above to find and add cards!</p>
     </div>
     <div v-else-if="!isLoadingCollection && userCollection.length > 0 && !userCollectionError" class="collection-grid">
-      <div v-for="item in userCollection" :key="item.id" class="collection-item hover-image-container">
+      <div v-for="item in paginatedCollection" :key="item.id" class="collection-item">
+        <img
+          :src="getCardImageUrl(item.card_definition)"
+          :alt="item.card_definition?.name || 'Card Image'"
+          class="collection-card-image"
+          @error="event => event.target.src = defaultCardImage"
+        />
         <p class="card-name"><strong>{{ item.card_definition?.name || 'Unknown Card' }}</strong></p>
         <p class="card-detail" v-if="item.quantity_normal > 0">Quantity (Normal): {{ item.quantity_normal }}</p>
         <p class="card-detail" v-if="item.quantity_foil > 0">Quantity (Foil): {{ item.quantity_foil }}</p>
         <p class="card-detail">Condition: {{ item.condition }}</p>
-        <!-- Image only appears on hover -->
-        <div class="hover-image">
-          <img
-            :src="getCardImageUrl(item.card_definition)"
-            :alt="item.card_definition?.name || 'Card Image'"
-            class="collection-card-image"
-            @error="event => event.target.src = defaultCardImage"
-          />
-        </div>
       </div>
+    </div>
+    <!-- Pagination Controls -->
+    <div v-if="totalPages > 1" class="pagination-controls">
+      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
     </div>
   </div>
 </template>
 
 <script setup>
 // Potentially some basic script
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import CardSearch from '../components/CardSearch.vue'; // Ensure path is correct
 import api from '../services/api'; // Your API service
 import authStore from '../store/auth'; // If needed for auth token implicitly by api service
@@ -87,6 +90,25 @@ const addCardError = ref('');
 const isAddingCard = ref(false);
 const userCollectionError = ref(''); // For displaying errors when fetching collection
 const defaultCardImage = 'https://via.placeholder.com/150x210.png?text=No+Image';
+
+const CARDS_PER_PAGE = 15;
+const currentPage = ref(1);
+
+const totalPages = computed(() =>
+  Math.ceil(userCollection.value.length / CARDS_PER_PAGE)
+);
+
+const paginatedCollection = computed(() => {
+  const start = (currentPage.value - 1) * CARDS_PER_PAGE;
+  return userCollection.value.slice(start, start + CARDS_PER_PAGE);
+});
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) currentPage.value++;
+}
+function prevPage() {
+  if (currentPage.value > 1) currentPage.value--;
+}
 
 const fetchUserCollection = async () => {
   isLoadingCollection.value = true;
@@ -184,7 +206,8 @@ onMounted(() => {
 
 .collection-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr); /* 5 columns */
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: 1fr;
   gap: 20px;
   margin-top: 20px;
 }
@@ -215,5 +238,29 @@ onMounted(() => {
 }
 .hover-image-container:hover .hover-image {
   display: block;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+  margin-top: 20px;
+}
+.pagination-controls button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+}
+.pagination-controls button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+.pagination-controls span {
+  font-size: 1em;
+  color: #333;
 }
 </style>
