@@ -10,5 +10,9 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)) // More robust way to define @
     }
+  },
+  server: {
+    host: true,
+    allowedHosts: ['pg.thesocialist.network']
   }
 })

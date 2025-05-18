@@ -40,6 +40,8 @@ origins = [
     "http://localhost:5173",    # Common port for Vite dev servers
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "http://pg.thesocialist.network",           # <--- Add this line
+    "https://pg.thesocialist.network",          # <--- And this if you use HTTPS
 ]
 
 app.add_middleware(
