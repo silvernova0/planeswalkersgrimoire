@@ -42,6 +42,38 @@
       </div>
     </div>
 
+    <!-- Filters Section -->
+    <div class="collection-filters">
+      <label>
+        Set Code:
+        <select v-model="filters.set">
+          <option value="">All</option>
+          <option v-for="set in uniqueSets" :key="set" :value="set">{{ set }}</option>
+        </select>
+      </label>
+      <label>
+        Card Type:
+        <select v-model="filters.type">
+          <option value="">All</option>
+          <option v-for="type in uniqueTypes" :key="type" :value="type">{{ type }}</option>
+        </select>
+      </label>
+      <label>
+        Colors:
+        <select v-model="filters.colors" multiple>
+          <option v-for="color in colorOptions" :key="color" :value="color">{{ color }}</option>
+        </select>
+      </label>
+      <label>
+        Language:
+        <select v-model="filters.language">
+          <option value="">All</option>
+          <option v-for="lang in languageOptions" :key="lang" :value="lang">{{ lang }}</option>
+        </select>
+      </label>
+      <button @click="resetFilters">Reset Filters</button>
+    </div>
+
     <!-- Display User's Collection -->
     <div v-if="isLoadingCollection" class="loading-message">Loading your collection...</div>
     <p v-else-if="!isLoadingCollection && userCollectionError" class="error-message">{{ userCollectionError }}</p>
@@ -57,9 +89,15 @@
           @error="event => event.target.src = defaultCardImage"
         />
         <p class="card-name"><strong>{{ item.card_definition?.name || 'Unknown Card' }}</strong></p>
+        <p class="card-detail">
+          Set: <strong>{{ item.card_definition.set?.toUpperCase() }}</strong>
+          <span v-if="item.card_definition.set_name">({{ item.card_definition.set_name }})</span>
+          <span v-if="item.card_definition.collector_number"> - #{{ item.card_definition.collector_number }}</span>
+        </p>
         <p class="card-detail" v-if="item.quantity_normal > 0">Quantity (Normal): {{ item.quantity_normal }}</p>
         <p class="card-detail" v-if="item.quantity_foil > 0">Quantity (Foil): {{ item.quantity_foil }}</p>
         <p class="card-detail">Condition: {{ item.condition }}</p>
+        <button @click="removeCardFromCollection(item)" style="margin-top:10px;color:red;">Remove</button>
       </div>
     </div>
     <!-- Pagination Controls -->
@@ -94,21 +132,63 @@ const defaultCardImage = 'https://via.placeholder.com/150x210.png?text=No+Image'
 const CARDS_PER_PAGE = 15;
 const currentPage = ref(1);
 
-const totalPages = computed(() =>
-  Math.ceil(userCollection.value.length / CARDS_PER_PAGE)
-);
-
-const paginatedCollection = computed(() => {
-  const start = (currentPage.value - 1) * CARDS_PER_PAGE;
-  return userCollection.value.slice(start, start + CARDS_PER_PAGE);
+const filters = ref({
+  set: '',
+  type: '',
+  colors: [],
+  language: 'en', // default to English
 });
 
-function nextPage() {
-  if (currentPage.value < totalPages.value) currentPage.value++;
+const mainTypes = [
+  'Sorcery', 'Land', 'Kindred', 'Planeswalker', 'Battle',
+  'Instant', 'Creature', 'Enchantment', 'Artifact'
+];
+
+const uniqueTypes = computed(() => {
+  const types = userCollection.value
+    .map(item => {
+      const typeLine = item.card_definition.type_line || '';
+      return mainTypes.find(type => typeLine && typeLine.includes(type));
+    })
+    .filter(Boolean);
+  return mainTypes.filter(type => types.includes(type));
+});
+
+const uniqueSets = computed(() => [...new Set(userCollection.value.map(item => item.card_definition.set?.toUpperCase()).filter(Boolean))]);
+const languageOptions = computed(() => [...new Set(userCollection.value.map(item => item.card_definition.lang || 'en'))]);
+const colorOptions = ['W', 'U', 'B', 'R', 'G', 'C', 'M']; // White, Blue, Black, Red, Green, Colorless, Multicolor
+
+function resetFilters() {
+  filters.value = { set: '', type: '', colors: [], language: 'en' };
 }
-function prevPage() {
-  if (currentPage.value > 1) currentPage.value--;
-}
+
+// Filtered collection
+const filteredCollection = computed(() => {
+  return userCollection.value.filter(item => {
+    const def = item.card_definition;
+    // Set filter
+    if (filters.value.set && def.set?.toUpperCase() !== filters.value.set) return false;
+    // Type filter
+    if (filters.value.type && !def.type_line?.includes(filters.value.type)) return false;
+    // Language filter
+    if (filters.value.language && def.lang !== filters.value.language) return false;
+    // Colors filter (multi-select, must match all selected)
+    if (filters.value.colors.length > 0) {
+      const cardColors = def.color_identity || [];
+      if (!filters.value.colors.every(c => cardColors.includes(c))) return false;
+    }
+    return true;
+  });
+});
+
+// Use filteredCollection for pagination
+const paginatedCollection = computed(() => {
+  const start = (currentPage.value - 1) * CARDS_PER_PAGE;
+  return filteredCollection.value.slice(start, start + CARDS_PER_PAGE);
+});
+const totalPages = computed(() =>
+  Math.ceil(filteredCollection.value.length / CARDS_PER_PAGE)
+);
 
 const fetchUserCollection = async () => {
   isLoadingCollection.value = true;
@@ -181,6 +261,16 @@ const cancelAddCard = () => {
   addCardError.value = '';
 };
 
+async function removeCardFromCollection(item) {
+  if (!confirm(`Remove ${item.card_definition?.name || 'this card'} from your collection?`)) return;
+  try {
+    await api.removeCardFromCollection(item.id); // Implement this in your api.js
+    await fetchUserCollection();
+  } catch (error) {
+    alert('Failed to remove card.');
+  }
+}
+
 onMounted(() => {
   fetchUserCollection();
 });
@@ -203,6 +293,22 @@ onMounted(() => {
 .modal-actions button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
 .modal-actions button[type="submit"] { background-color: #28a745; color: white; }
 .modal-actions button[type="button"] { background-color: #6c757d; color: white; }
+
+.collection-filters {
+  display: flex;
+  gap: 1em;
+  margin-bottom: 1em;
+  flex-wrap: wrap;
+}
+.collection-filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95em;
+}
+.collection-filters select[multiple] {
+  min-width: 80px;
+  min-height: 60px;
+}
 
 .collection-grid {
   display: grid;

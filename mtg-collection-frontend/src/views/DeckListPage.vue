@@ -67,6 +67,7 @@
           <span v-if="card.color_identity && card.color_identity.length">
             ({{ card.color_identity.join(',') }})
           </span>
+          <button @click="removeCardFromDeck(idx)" style="margin-left:10px;color:red;">Remove</button>
         </li>
       </ul>
       <button @click="selectedDeck = null">Done</button>
@@ -168,6 +169,10 @@ function addCardToDeck() {
 
   selectedDeck.value.cards.push(selectedCard.value);
   selectedCard.value = null;
+}
+
+function removeCardFromDeck(idx) {
+  selectedDeck.value.cards.splice(idx, 1);
 }
 
 const groupedAndSortedCards = (deck) => {
