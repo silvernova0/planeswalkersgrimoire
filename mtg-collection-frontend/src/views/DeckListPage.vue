@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../services/api';
 import CardSearch from '../components/CardSearch.vue';
 
@@ -87,8 +87,19 @@ const viewedDeck = ref(null);
 
 const selectedCard = ref(null);
 
+const userCollection = ref([]);
+
+onMounted(async () => {
+  try {
+    const response = await api.getUserCollection();
+    userCollection.value = response.data;
+  } catch (error) {
+    console.error('Failed to fetch user collection:', error);
+  }
+});
+
 // Suppose you have access to userCollection (array of scryfall_ids or card names)
-const userCollectionIds = new Set(userCollection.map(c => c.card_definition_scryfall_id));
+const userCollectionIds = new Set(userCollection.value.map(c => c.card_definition_scryfall_id));
 
 // When you get search results:
 function sortSearchResults(results) {
