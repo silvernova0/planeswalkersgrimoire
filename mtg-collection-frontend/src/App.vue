@@ -5,6 +5,7 @@ import Navbar from './components/Navbar.vue';
 <template>
   <Navbar />
   <div class="container">
+    <h1>Planeswalkers Grimoire</h1>
     <router-view></router-view>
   </div>
 </template>
