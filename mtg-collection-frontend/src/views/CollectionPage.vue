@@ -1,7 +1,6 @@
 <template>
   <div class="collection-page">
     <h1>My Collection</h1>
-    <p>Your collection is empty.</p>
 
     <!-- Card Search and Add Section -->
     <CardSearch @card-selected="handleCardSelectedForAddition" />
@@ -14,7 +13,10 @@
         <form @submit.prevent="confirmAddCardToCollection" class="add-card-form">
           <div>
             <label for="quantity">Quantity:</label>
-            <input type="number" id="quantity" v-model.number="addDetails.quantity" min="1" required />
+            <select id="quantity" v-model.number="addDetails.quantity">
+              <option v-for="n in 10" :key="n" :value="n">{{ n }}</option> <!-- Changed range to 1-10 -->
+            </select>
+            <!-- <input type="number" id="quantity" v-model.number="addDetails.quantity" min="1" required /> -->
           </div>
           <div>
             <label for="condition">Condition:</label>
@@ -42,16 +44,18 @@
 
     <!-- Display User's Collection -->
     <div v-if="isLoadingCollection" class="loading-message">Loading your collection...</div>
-    <div v-else-if="userCollection.length === 0 && !isLoadingCollection" class="empty-collection-message">
+    <p v-else-if="!isLoadingCollection && userCollectionError" class="error-message">{{ userCollectionError }}</p>
+    <div v-else-if="!isLoadingCollection && userCollection.length === 0 && !userCollectionError" class="empty-collection-message">
       <p>Your collection is empty. Use the search above to find and add cards!</p>
     </div>
-    <div v-else class="collection-grid">
+    <div v-else-if="!isLoadingCollection && userCollection.length > 0 && !userCollectionError" class="collection-grid">
       <div v-for="item in userCollection" :key="item.id" class="collection-item">
         <!-- Display your collected card details here. Adjust 'item' properties based on your API response -->
-        <img :src="item.card_details?.image_uris?.small || defaultCardImage" :alt="item.card_details?.name" class="collection-card-image"/>
-        <p><strong>{{ item.card_details?.name || 'Unknown Card' }}</strong></p>
-        <p>Quantity: {{ item.quantity }}</p>
-        <p>Condition: {{ item.condition }} {{ item.is_foil ? '(Foil)' : '' }}</p>
+        <img :src="getCardImageUrl(item.card_definition)" :alt="item.card_definition?.name || 'Card Image'" class="collection-card-image"/>
+        <p class="card-name"><strong>{{ item.card_definition?.name || 'Unknown Card' }}</strong></p>
+        <p class="card-detail" v-if="item.quantity_normal > 0">Quantity (Normal): {{ item.quantity_normal }}</p>
+        <p class="card-detail" v-if="item.quantity_foil > 0">Quantity (Foil): {{ item.quantity_foil }}</p>
+        <p class="card-detail">Condition: {{ item.condition }}</p>
         <!-- You might want a button to edit/remove items here in the future -->
       </div>
     </div>
@@ -75,26 +79,53 @@ const addDetails = ref({
 });
 const addCardError = ref('');
 const isAddingCard = ref(false);
+const userCollectionError = ref(''); // For displaying errors when fetching collection
 const defaultCardImage = 'https://via.placeholder.com/100x140.png?text=No+Image'; // Placeholder
 
 const fetchUserCollection = async () => {
   isLoadingCollection.value = true;
+  userCollectionError.value = ''; // Reset error before fetching
   try {
-    // You'll need to implement `getUserCollection` in your api.js
+    // Ensure api.getUserCollection() is implemented and returns an array in response.data
     const response = await api.getUserCollection();
     userCollection.value = response.data; // Adjust based on your API response structure
   } catch (error) {
     console.error('Error fetching user collection:', error);
-    // Handle error display
+    userCollectionError.value = 'Failed to load your collection. Please try refreshing the page or try again later.';
   } finally {
     isLoadingCollection.value = false;
+    };
+
+// Helper to construct full image URL
+const getCardImageUrl = (cardDefinition) => {
+  if (!cardDefinition) return defaultCardImage;
+
+  // Option 1: If your API provides a direct relative path for a locally served image
+  // (e.g., in cardDefinition.local_image_url_small or even cardDefinition.image_uris.small if it's relative)
+  const localRelativePath = cardDefinition.local_image_url_small || cardDefinition.image_uris?.small; // Adjust field based on your API structure
+
+  if (localRelativePath) {
+    if (localRelativePath.startsWith('http://') || localRelativePath.startsWith('https://')) {
+      return localRelativePath; // It's already an absolute URL
+    }
+    // Construct full URL for relative path from your API
+    const baseUrl = api.defaults.baseURL.replace(/\/$/, ''); // Remove any trailing slash from API base URL
+    const path = localRelativePath.startsWith('/') ? localRelativePath : `/${localRelativePath}`; // Ensure leading slash for path
+    return `${baseUrl}${path}`;
+  }
+
+  // Option 2: Fallback to a Scryfall direct image URL if available and no local path
+  // This line might be redundant if image_uris.small was already checked above and was a Scryfall URL.
+  // if (cardDefinition.image_uris?.small) return cardDefinition.image_uris.small;
+
+  return defaultCardImage; // Default placeholder if no image found
   }
 };
 
 const handleCardSelectedForAddition = (card) => {
   cardToAdd.value = card;
   // Reset details for the new card
-  addDetails.value = { quantity: 1, condition: 'NM', isFoil: false };
+  addDetails.value = { quantity: 1, condition: 'NM', isFoil: false }; // Default quantity is 1
   addCardError.value = '';
 };
 
@@ -144,10 +175,10 @@ onMounted(() => {
 
 .add-card-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .add-card-modal { background-color: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 90%; max-width: 500px; }
-.add-card-modal h3 { margin-top: 0; margin-bottom: 15px; }
+.add-card-modal h3 { margin-top: 0; margin-bottom: 15px; color: #333; /* Darker color for heading */ }
 .modal-card-image { max-width: 150px; display: block; margin: 0 auto 15px auto; border-radius: 6px; }
 .add-card-form div { margin-bottom: 12px; }
-.add-card-form label { display: block; margin-bottom: 5px; font-weight: bold; }
+.add-card-form label { display: block; margin-bottom: 5px; font-weight: bold; color: #444; /* Slightly darker label color */ }
 .add-card-form input[type="number"], .add-card-form select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
 .add-card-form input[type="checkbox"] { margin-right: 5px; vertical-align: middle; }
 .modal-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
@@ -160,4 +191,10 @@ onMounted(() => {
 .collection-card-image { max-width: 100%; height: auto; border-radius: 6px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
 .collection-item p { margin: 5px 0; font-size: 0.9em; }
 .collection-item strong { font-size: 1em; }
+.collection-item .card-name strong {
+  color: #333333; /* Dark color for card name, ensuring visibility */
+}
+.collection-item .card-detail {
+  color: #555555; /* Medium-dark color for details */
+}
 </style>

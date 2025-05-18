@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar">
     <router-link to="/collection" class="nav-link">My Collection</router-link>
-    <!-- Add other links like Decks, Search etc. -->
+    <router-link to="/decks" class="nav-link">My Decks</router-link> <!-- Added Decks link -->
     <button v-if="isLoggedIn" @click="logout" class="logout-button">Logout</button>
   </nav>
 </template>
@@ -24,8 +24,8 @@ const logout = () => {
 .navbar {
   background-color: #333;
   padding: 1rem;
-  display: flex;
-  justify-content: space-between; /* Adjusted for logout button */
+  display: flex; /* Using flex for layout */
+  justify-content: flex-start; /* Align links to the start */
   align-items: center;
 }
 .nav-link {
@@ -37,6 +37,7 @@ const logout = () => {
   text-decoration: underline;
 }
 .logout-button {
+  margin-left: auto; /* Pushes logout button to the right */
   background-color: #555;
   color: white;
   border: none;

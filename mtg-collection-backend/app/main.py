@@ -6,6 +6,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from datetime import timedelta
+from jose import JWTError # Import JWTError
+
 
 from . import models, schemas, crud, security # Import security
 from .database import engine, get_db
@@ -52,7 +54,7 @@ app.add_middleware(
 async def get_current_active_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> models.User:
     try:
         token_data = await security.get_current_user_token_data(token)
-    except JWTError: # Re-raise as HTTPException
+    except JWTError: # Now JWTError is defined
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",

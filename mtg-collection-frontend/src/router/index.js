@@ -25,13 +25,13 @@ const routes = [
   {
     path: '/decks',
     name: 'DecksList',
-    component: () => import('../views/DecksListPage.vue'), // Lazy load component
+    component: () => import('@/views/DeckListPage.vue'), // Lazy load component using @ alias
     meta: { requiresAuth: true },
   },
   {
     path: '/decks/:deckId', // Dynamic segment for deck ID
     name: 'DeckDetail',
-    component: () => import('../views/DeckDetailPage.vue'), // Lazy load component
+    component: () => import('@/views/DeckDetailPage.vue'), // Lazy load component using @ alias
     meta: { requiresAuth: true },
     props: true, // Automatically pass route params as props to the component
   },

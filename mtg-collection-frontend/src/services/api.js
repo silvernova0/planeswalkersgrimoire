@@ -21,6 +21,24 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Interceptor to handle 401 errors (e.g., token expired)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token is invalid or expired
+      authStore.clearAuth();
+      // Redirect to login page
+      // You might need to access the router instance here or emit an event
+      // For simplicity, we'll just log and let the route guards handle redirection
+      console.error("Unauthorized or token expired. Logging out.");
+      // router.push('/login'); // If router is accessible here
+      window.location.href = '/login'; // Fallback redirect
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default {
   login(credentials) {
     // FastAPI's OAuth2PasswordRequestForm expects form data
