@@ -523,4 +523,4 @@ async def add_card_to_specific_deck(
 # - DELETE /decks/{deck_id}/cards/{deck_entry_id} (Remove a card from a deck)
 
 from app.api import meta
-app.include_router(meta.router)
+app.include_router(meta.router, prefix="/api")

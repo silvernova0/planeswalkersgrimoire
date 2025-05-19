@@ -82,20 +82,32 @@ def parse_deck(deck_url):
             print(f"Warning: No deck name found for {deck_url}")
             print(soup.prettify()[:1000])
             return None
-    # Placement (often in a <td> or <div>)
     placement = None  # Parse as needed
 
-    # Find commander: usually the first card in the first table
+    # Find commander: look for a row with "Commander" or similar
     commander = None
-    first_table = soup.find('table', class_='Stable')
-    if first_table:
-        first_row = first_table.find('tr')
-        if first_row:
-            cols = first_row.find_all('td')
-            if len(cols) == 2:
-                commander = cols[1].get_text(strip=True)
+    for row in soup.select('table.Stable tr'):
+        cols = row.find_all('td')
+        if len(cols) == 2:
+            label = cols[1].get_text(strip=True)
+            if "commander" in label.lower():
+                # Sometimes the label is "Commander: Card Name"
+                parts = label.split(":")
+                if len(parts) > 1:
+                    commander = parts[1].strip()
+                else:
+                    commander = label.strip()
+                break
+    # Fallback: use the first card in the first table
+    if not commander:
+        first_table = soup.find('table', class_='Stable')
+        if first_table:
+            first_row = first_table.find('tr')
+            if first_row:
+                cols = first_row.find_all('td')
+                if len(cols) == 2:
+                    commander = cols[1].get_text(strip=True)
 
-    # Cards: look for the main deck table
     cards = []
     for row in soup.select('table.Stable tr'):
         cols = row.find_all('td')
