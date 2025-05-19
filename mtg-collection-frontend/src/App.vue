@@ -5,7 +5,6 @@ import Navbar from './components/Navbar.vue';
 <template>
   <Navbar />
   <div class="container">
-    <h1>Planeswalkers Grimoire</h1>
     <router-view></router-view>
   </div>
 </template>
@@ -27,7 +26,7 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 40px 20px 20px 250px; /* Add left padding for sidebar */
   /* Optional: Add a semi-transparent background to the container if text is hard to read over the main background */
   /* background-color: rgba(255, 255, 255, 0.8); */
   /* border-radius: 8px; */

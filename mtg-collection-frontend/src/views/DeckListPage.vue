@@ -12,6 +12,19 @@
       </select>
       <button type="submit">Create Deck</button>
     </form>
+    <button @click="showImportModal = true">Import Deck</button>
+    <div v-if="showImportModal" class="import-modal">
+      <h3>Import Deck from CSV or List</h3>
+      <input type="file" accept=".csv" @change="handleFileUpload" />
+      <textarea v-model="importText" placeholder="Paste card list here"></textarea>
+      <button @click="parseImport">Parse</button>
+      <button @click="showImportModal = false">Cancel</button>
+      <div v-if="importErrors.length">
+        <ul>
+          <li v-for="err in importErrors" :key="err">{{ err }}</li>
+        </ul>
+      </div>
+    </div>
     <div v-if="decks.length === 0" style="margin-top: 1em;">No decks yet.</div>
     <ul>
       <li v-for="deck in decks" :key="deck.id" style="margin-bottom: 1em;">
@@ -79,6 +92,7 @@
 import { ref, computed, onMounted } from 'vue';
 import api from '../services/api';
 import CardSearch from '../components/CardSearch.vue';
+import Papa from 'papaparse'; // npm install papaparse
 
 const decks = ref([]);
 const newDeckName = ref('');
@@ -89,6 +103,10 @@ const viewedDeck = ref(null);
 const selectedCard = ref(null);
 
 const userCollection = ref([]);
+
+const showImportModal = ref(false);
+const importText = ref('');
+const importErrors = ref([]);
 
 onMounted(async () => {
   try {
@@ -175,6 +193,41 @@ function removeCardFromDeck(idx) {
   selectedDeck.value.cards.splice(idx, 1);
 }
 
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  Papa.parse(file, {
+    header: true,
+    complete: (results) => {
+      importText.value = results.data.map(row => `${row.Quantity} ${row['Card Name']} (${row['Set Code']})`).join('\n');
+    }
+  });
+}
+
+async function parseImport() {
+  importErrors.value = [];
+  const lines = importText.value.split('\n').map(l => l.trim()).filter(Boolean);
+  const cards = [];
+  for (const line of lines) {
+    // Example: "2 Lightning Bolt (SLD)"
+    const match = line.match(/^(\d+)\s+(.+)\s+\((\w+)\)$/);
+    if (!match) {
+      importErrors.value.push(`Invalid line: "${line}"`);
+      continue;
+    }
+    const [, quantity, name, set] = match;
+    // TODO: Lookup card in your DB or via API using name and set
+    // Example: const card = await api.searchCardByNameAndSet(name, set);
+    // if (!card) { importErrors.value.push(`Card not found: ${name} (${set})`); continue; }
+    cards.push({ name, set, quantity: Number(quantity) });
+  }
+  if (importErrors.value.length === 0) {
+    // TODO: Create deck and add cards via API
+    // await api.createDeckWithCards(deckName, cards);
+    showImportModal.value = false;
+  }
+}
+
 const groupedAndSortedCards = (deck) => {
   if (!deck || !deck.cards) return {};
   // Group by main type (first word in type_line, e.g., "Creature")
@@ -239,5 +292,16 @@ input, select {
 }
 .search-results li:hover {
   background: #eee;
+}
+.import-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 2em;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  z-index: 1002;
 }
 </style>

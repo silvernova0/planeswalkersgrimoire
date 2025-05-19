@@ -3,9 +3,16 @@ import { createRouter, createWebHistory } from 'vue-router';
 import LoginPage from '../views/LoginPage.vue';
 import RegisterPage from '../views/RegisterPage.vue';
 import CollectionPage from '../views/CollectionPage.vue';
+import HomePage from '../views/HomePage.vue';
+import CreditsPage from '../views/CreditsPage.vue';
 import authStore from '../store/auth';
 
 const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: HomePage,
+  },
   {
     path: '/login',
     name: 'Login',
@@ -36,7 +43,7 @@ const routes = [
     props: true, // Automatically pass route params as props to the component
   },
   {
-    path: '/',
+    path: '/redirect',
     redirect: () => {
       if (!authStore.getToken()) {
         return { name: 'Login' };
@@ -44,6 +51,11 @@ const routes = [
         return { name: 'Collection' };
       }
     },
+  },
+  {
+    path: '/credits',
+    name: 'Credits',
+    component: CreditsPage,
   },
 ];
 
