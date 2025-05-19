@@ -159,3 +159,51 @@ class MetaDeckCard(Base):
     is_commander = Column(Boolean, default=False)
 
     deck = relationship("MetaDeck", back_populates="cards")
+
+# app/routers/meta.py
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.sql import func, desc
+from app.models import MetaDeckCard, MetaDeck
+from app.database import get_db
+
+router = APIRouter()
+
+@router.get("/meta/top-commanders")
+async def get_top_commanders(db: AsyncSession = Depends(get_db)):
+    # Get top 3 commanders by count
+    result = await db.execute(
+        select(
+            MetaDeckCard.card_name,
+            func.count(MetaDeckCard.deck_id).label("count")
+        )
+        .where(MetaDeckCard.is_commander == True)
+        .group_by(MetaDeckCard.card_name)
+        .order_by(desc("count"))
+        .limit(3)
+    )
+    commanders = result.all()
+    # For each commander, get 3 example decks
+    data = []
+    for commander, count in commanders:
+        decks_result = await db.execute(
+            select(MetaDeck)
+            .join(MetaDeckCard, MetaDeck.id == MetaDeckCard.deck_id)
+            .where(MetaDeckCard.card_name == commander, MetaDeckCard.is_commander == True)
+            .limit(3)
+        )
+        decks = decks_result.scalars().all()
+        data.append({
+            "commander": commander,
+            "count": count,
+            "decks": [
+                {
+                    "id": d.id,
+                    "name": d.name,
+                    "placement": d.placement,
+                    "url": d.url
+                } for d in decks
+            ]
+        })
+    return data
