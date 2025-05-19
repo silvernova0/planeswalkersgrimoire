@@ -5,6 +5,7 @@
     <router-link to="/collection" class="nav-link">My Collection</router-link>
     <router-link to="/decks" class="nav-link">My Decks</router-link>
     <router-link to="/credits" class="nav-link">Credits</router-link>
+    <router-link to="/top-commanders" class="nav-link">Top Commanders</router-link>
     <button v-if="isLoggedIn" @click="logout" class="logout-button">Logout</button>
   </nav>
 </template>

@@ -521,3 +521,6 @@ async def add_card_to_specific_deck(
 # You would also add endpoints for:
 # - PUT /decks/{deck_id}/cards/{deck_entry_id} (Update card quantity/role in deck)
 # - DELETE /decks/{deck_id}/cards/{deck_entry_id} (Remove a card from a deck)
+
+from app.api import meta
+app.include_router(meta.router)

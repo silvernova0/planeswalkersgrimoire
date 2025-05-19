@@ -9,6 +9,12 @@
       Planeswalkers Grimoire is an open-source, community-driven project.<br>
       Magic: The Gathering is &copy; Wizards of the Coast.
     </p>
+    <ul>
+      <li>
+        Data for cEDH decks provided by
+        <a href="https://www.mtgtop8.com/" target="_blank" rel="noopener">MTGTop8</a>
+      </li>
+    </ul>
   </div>
 </template>
 

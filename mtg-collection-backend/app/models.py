@@ -1,5 +1,5 @@
 # app/models.py
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON, LargeBinary, Float
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON, LargeBinary, Float, Date
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB # For PostgreSQL specific types
 from sqlalchemy.sql import func # For server-side default timestamp
 from sqlalchemy.orm import relationship
@@ -127,3 +127,35 @@ class UserCollectionEntry(Base):
 
     owner = relationship("User", back_populates="collection_entries")
     card_definition = relationship("CardDefinition", back_populates="collection_entries")
+
+class MetaTournament(Base):
+    __tablename__ = "meta_tournaments"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    date = Column(Date, nullable=True)
+    url = Column(String, nullable=False)
+
+    decks = relationship("MetaDeck", back_populates="tournament")
+
+class MetaDeck(Base):
+    __tablename__ = "meta_decks"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    commander = Column(String, nullable=True)
+    tournament_id = Column(Integer, ForeignKey("meta_tournaments.id"))
+    placement = Column(String, nullable=True)
+    url = Column(String, nullable=False)
+
+    tournament = relationship("MetaTournament", back_populates="decks")
+    cards = relationship("MetaDeckCard", back_populates="deck")
+
+class MetaDeckCard(Base):
+    __tablename__ = "meta_deck_cards"
+    id = Column(Integer, primary_key=True, index=True)
+    deck_id = Column(Integer, ForeignKey("meta_decks.id"))
+    card_name = Column(String, nullable=False)
+    set_code = Column(String, nullable=True)
+    quantity = Column(Integer, nullable=False)
+    is_commander = Column(Boolean, default=False)
+
+    deck = relationship("MetaDeck", back_populates="cards")

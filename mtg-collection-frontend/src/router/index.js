@@ -5,6 +5,7 @@ import RegisterPage from '../views/RegisterPage.vue';
 import CollectionPage from '../views/CollectionPage.vue';
 import HomePage from '../views/HomePage.vue';
 import CreditsPage from '../views/CreditsPage.vue';
+import TopCommanders from '../views/TopCommanders.vue';
 import authStore from '../store/auth';
 
 const routes = [
@@ -56,6 +57,11 @@ const routes = [
     path: '/credits',
     name: 'Credits',
     component: CreditsPage,
+  },
+  {
+    path: '/top-commanders',
+    name: 'TopCommanders',
+    component: TopCommanders,
   },
 ];
 

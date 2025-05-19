@@ -10,6 +10,9 @@
         <option>Pauper</option>
         <option>Commander</option>
       </select>
+      <label style="margin-left: 0.5em;">
+        <input type="checkbox" v-model="newDeckIsPublic" /> Make Public
+      </label>
       <button type="submit">Create Deck</button>
     </form>
     <button @click="showImportModal = true">Import Deck</button>
@@ -28,10 +31,16 @@
     <div v-if="decks.length === 0" style="margin-top: 1em;">No decks yet.</div>
     <ul>
       <li v-for="deck in decks" :key="deck.id" style="margin-bottom: 1em;">
-        <strong>{{ deck.name }}</strong> <em>({{ deck.category }})</em>
+        <strong>{{ deck.name }}</strong> <em>({{ deck.category }}) </em>
+        <span v-if="deck.is_public" style="color: green; font-size: 0.8em;">(Public)</span>
+        <span v-else style="color: dimgray; font-size: 0.8em;">(Private)</span>
         <span v-if="deck.category === 'Commander' && deck.commander">
           — Commander: <strong>{{ deck.commander.name }}</strong>
         </span>
+        <button @click="toggleDeckVisibility(deck)" style="margin-left: 5px;">
+          {{ deck.is_public ? 'Make Private' : 'Make Public' }}
+        </button>
+        <button @click="deleteDeck(deck.id)" style="margin-left: 5px; color:red;">Delete</button>
         <button @click="selectDeck(deck)">Edit</button>
         <button @click="viewDeck(deck)">View</button>
       </li>
@@ -97,6 +106,7 @@ import Papa from 'papaparse'; // npm install papaparse
 const decks = ref([]);
 const newDeckName = ref('');
 const newDeckCategory = ref('');
+const newDeckIsPublic = ref(false); // For new deck creation
 const selectedDeck = ref(null);
 const viewedDeck = ref(null);
 
@@ -111,11 +121,24 @@ const importErrors = ref([]);
 onMounted(async () => {
   try {
     const response = await api.getUserCollection();
-    userCollection.value = response.data;
+    userCollection.value = response.data || [];
   } catch (error) {
     console.error('Failed to fetch user collection:', error);
+    userCollection.value = []; // Ensure it's an array on error
   }
+  await fetchDecks();
 });
+
+async function fetchDecks() {
+  try {
+    // const response = await api.getDecks(); // Replace with your actual API call
+    // decks.value = response.data || [];    // Ensure API returns is_public for each deck
+    decks.value = []; // Initialize as empty or with mock data if API not ready
+  } catch (error) {
+    console.error('Failed to fetch decks:', error);
+    decks.value = []; // Ensure it's an array on error
+  }
+}
 
 // Suppose you have access to userCollection (array of scryfall_ids or card names)
 const userCollectionIds = new Set(userCollection.value.map(c => c.card_definition_scryfall_id));
@@ -136,12 +159,28 @@ function createDeck() {
     id: Date.now(),
     name: newDeckName.value,
     category: newDeckCategory.value,
+    is_public: newDeckIsPublic.value, // Save public status
     cards: [],
     commander: null // Only used for Commander decks
   };
+  // TODO: Replace with API call:
+  // try {
+  //   const response = await api.createDeck({
+  //     name: newDeckName.value,
+  //     category: newDeckCategory.value,
+  //     is_public: newDeckIsPublic.value
+  //   });
+  //   decks.value.push(response.data); // Add deck returned from API
+  //   selectDeck(response.data);
+  // } catch (error) {
+  //   console.error("Failed to create deck:", error);
+  //   alert("Error creating deck.");
+  // }
+
   decks.value.push(deck);
   newDeckName.value = '';
   newDeckCategory.value = '';
+  newDeckIsPublic.value = false; // Reset for next deck
   selectDeck(deck);
 }
 
@@ -191,6 +230,38 @@ function addCardToDeck() {
 
 function removeCardFromDeck(idx) {
   selectedDeck.value.cards.splice(idx, 1);
+}
+
+async function toggleDeckVisibility(deckToToggle) {
+  const originalStatus = deckToToggle.is_public;
+  // Optimistic update
+  const deckInArray = decks.value.find(d => d.id === deckToToggle.id);
+  if (deckInArray) {
+    deckInArray.is_public = !deckInArray.is_public;
+  }
+
+  // TODO: API call to persist the change
+  // try {
+  //   await api.updateDeck(deckToToggle.id, { is_public: deckInArray.is_public });
+  //   // Optionally re-fetch or update from response if backend returns the updated deck
+  // } catch (error) {
+  //   console.error("Failed to update deck visibility:", error);
+  //   if (deckInArray) deckInArray.is_public = originalStatus; // Revert on error
+  //   alert("Error updating deck visibility.");
+  // }
+}
+
+async function deleteDeck(deckId) {
+  if (!confirm("Are you sure you want to delete this deck? This action cannot be undone.")) return;
+  // TODO: API call to delete the deck
+  // try {
+  //   await api.deleteDeck(deckId);
+  //   decks.value = decks.value.filter(d => d.id !== deckId);
+  // } catch (error) {
+  //   console.error("Failed to delete deck:", error);
+  //   alert("Error deleting deck.");
+  // }
+  decks.value = decks.value.filter(d => d.id !== deckId); // Local removal
 }
 
 function handleFileUpload(event) {
