@@ -102,7 +102,12 @@ async def get_user_by_username(db: AsyncSession, username: str) -> Optional[mode
 
 async def create_user(db: AsyncSession, user: schemas.UserCreate) -> models.User:
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(username=user.username, email=user.email, hashed_password=hashed_password)
+    db_user = models.User(
+        email=user.email,
+        username=user.email,  # Set username to email
+        hashed_password=hashed_password,
+        # ... other fields ...
+    )
     db.add(db_user)
     await db.flush()
     await db.refresh(db_user)

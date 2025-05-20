@@ -5,13 +5,11 @@ from typing import Optional
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    full_name: Optional[str] = None
 
 # Schema for reading user data (output, doesn't include password)
 class User(BaseModel):
     id: int
     email: EmailStr
-    full_name: Optional[str] = None
     is_active: bool = True # Default to active, can be managed by an admin later
 
     class Config:

@@ -46,10 +46,15 @@ def get_commander_archetype_links():
     return links
 
 def get_deck_links_from_archetype(archetype_url):
+    # Always use show=all to get all decks for the commander
+    if "show=all" not in archetype_url:
+        if "show=" in archetype_url:
+            archetype_url = re.sub(r"show=\w+", "show=all", archetype_url)
+        else:
+            archetype_url += "&show=all"
     resp = requests.get(archetype_url)
     soup = BeautifulSoup(resp.text, "html.parser")
     links = []
-    # Right side: <a href="event?e=60726&d=656453&f=cEDH">
     for a in soup.select('a[href^="event?e="][href*="&d="]'):
         links.append(BASE_URL + "/" + a['href'])
     return links
@@ -203,7 +208,11 @@ async def main():
         print(f"Commander archetype: {commander_url}")
         deck_links = get_deck_links_from_archetype(commander_url)
         for deck_url in deck_links:
-            parse_deck(deck_url)
+            deck_data = parse_deck(deck_url)
+            if not deck_data:
+                continue
+            # You may want to create a fake event_data or skip DB save if you only want to print
+            print(f"Commander deck: {deck_data['name']} | Commanders: {deck_data['commanders']}")
 
 if __name__ == "__main__":
     asyncio.run(main())

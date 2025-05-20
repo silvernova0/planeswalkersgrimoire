@@ -9,8 +9,8 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=False)  # Keep for legacy, but always set = email
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     date_joined = Column(DateTime(timezone=True), server_default=func.now())
@@ -207,3 +207,8 @@ async def get_top_commanders(db: AsyncSession = Depends(get_db)):
             ]
         })
     return data
+
+# app/frontend/login.js
+// When logging in, send { username: email, password }
+formData.append('username', email.value); // Use email as username
+formData.append('password', password.value);
