@@ -43,7 +43,12 @@
     </div>
 
     <!-- Filters Section -->
-    <div class="collection-filters">
+    <fieldset class="collection-filters">
+      <legend>Filter Your Collection</legend>
+      <div class="filter-item">
+        <label for="collectionSearch">Search Your Collection:</label>
+        <input type="text" id="collectionSearch" v-model="collectionSearchQuery" placeholder="Filter by name..." />
+      </div>
       <label>
         Set Code:
         <select v-model="filters.set">
@@ -72,7 +77,7 @@
         </select>
       </label>
       <button @click="resetFilters">Reset Filters</button>
-    </div>
+    </fieldset>
 
     <!-- Display User's Collection -->
     <div v-if="isLoadingCollection" class="loading-message">Loading your collection...</div>
@@ -138,6 +143,7 @@ const filters = ref({
   colors: [],
   language: '', // show all by default
 });
+const collectionSearchQuery = ref('');
 
 const mainTypes = [
   'Sorcery', 'Land', 'Kindred', 'Planeswalker', 'Battle',
@@ -146,6 +152,7 @@ const mainTypes = [
 
 const uniqueTypes = computed(() => {
   const types = userCollection.value
+    .filter(item => item.card_definition) // Add this filter
     .map(item => {
       const typeLine = item.card_definition.type_line || '';
       return mainTypes.find(type => typeLine && typeLine.includes(type));
@@ -154,18 +161,26 @@ const uniqueTypes = computed(() => {
   return mainTypes.filter(type => types.includes(type));
 });
 
-const uniqueSets = computed(() => [...new Set(userCollection.value.map(item => item.card_definition.set?.toUpperCase()).filter(Boolean))]);
-const languageOptions = computed(() => [...new Set(userCollection.value.map(item => item.card_definition.lang || 'en'))]);
+const uniqueSets = computed(() => [...new Set(userCollection.value
+  .filter(item => item.card_definition && item.card_definition.set) // Ensure card_definition and set exist
+  .map(item => item.card_definition.set.toUpperCase())
+)]);
+const languageOptions = computed(() => [...new Set(userCollection.value
+  .filter(item => item.card_definition) // Add this filter
+  .map(item => item.card_definition.lang || 'en')
+)]);
 const colorOptions = ['W', 'U', 'B', 'R', 'G', 'C', 'M']; // White, Blue, Black, Red, Green, Colorless, Multicolor
 
 function resetFilters() {
   filters.value = { set: '', type: '', colors: [], language: 'en' };
+  collectionSearchQuery.value = '';
 }
 
 // Filtered collection
 const filteredCollection = computed(() => {
   return userCollection.value.filter(item => {
     const def = item.card_definition;
+    if (!def) return false; // Skip items with no card_definition
     // Set filter
     if (filters.value.set && def.set?.toUpperCase() !== filters.value.set) return false;
     // Type filter
@@ -176,6 +191,14 @@ const filteredCollection = computed(() => {
     if (filters.value.colors.length > 0) {
       const cardColors = def.color_identity || [];
       if (!filters.value.colors.every(c => cardColors.includes(c))) return false;
+    }
+    // Collection search query filter
+    const query = collectionSearchQuery.value.toLowerCase().trim();
+    if (query) {
+      const nameMatch = def.name?.toLowerCase().includes(query);
+      // const typeMatch = def.type_line?.toLowerCase().includes(query); // Optional: add more fields
+      // if (!(nameMatch || typeMatch)) return false; // If searching multiple fields
+      if (!nameMatch) return false; // If only searching name
     }
     return true;
   });
@@ -299,11 +322,29 @@ onMounted(() => {
   gap: 1em;
   margin-bottom: 1em;
   flex-wrap: wrap;
+  align-items: flex-end; /* Align items to the bottom for better visual consistency */
+  border: 1px solid #ccc; /* Add a border for the fieldset */
+  padding: 1em; /* Add some padding inside the fieldset */
+  border-radius: 4px; /* Optional: rounds the corners of the fieldset */
 }
+.collection-filters legend {
+  font-weight: bold;
+  padding: 0 0.5em; /* Give some space around the legend text */
+  color: #333;
+}
+.collection-filters .filter-item,
 .collection-filters label {
   display: flex;
   flex-direction: column;
   font-size: 0.95em;
+}
+.collection-filters input[type="text"],
+.collection-filters select {
+  padding: 8px; /* Consistent padding */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Ensure padding doesn't expand element size */
+  margin-top: 4px; /* Space between label and input */
 }
 .collection-filters select[multiple] {
   min-width: 80px;

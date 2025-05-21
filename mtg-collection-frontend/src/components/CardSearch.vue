@@ -1,6 +1,6 @@
 <template>
   <div class="card-search">
-    <input v-model="searchQuery" @keyup.enter="performSearch" placeholder="Search for a card..." />
+    <input v-model="searchQuery" @keyup.enter="performSearch" placeholder="Search available cards..." />
     <button @click="performSearch" :disabled="isLoading">Search</button>
     <div v-if="isLoading" class="loading-message">Searching...</div>
     <ul v-if="searchResults.length > 0" class="search-results">
