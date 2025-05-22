@@ -97,59 +97,114 @@ def parse_event(event_url):
         "deck_links": list(deck_links)
     }
 
+import re # Ensure re is imported
+
 def parse_deck(deck_url):
     resp = requests.get(deck_url)
     soup = BeautifulSoup(resp.text, "html.parser")
-    h1 = soup.find('h1')
-    deck_name = h1.get_text(strip=True) if h1 else deck_url
 
-    # Find the decklist text block
-    # Try to find the <pre> or <div class="deck_line"> or similar
-    decklist_text = ""
-    pre = soup.find('pre')
-    if pre:
-        decklist_text = pre.get_text()
-    else:
-        # Fallback: try to find the decklist in a <div class="deck_line"> or similar
-        deck_div = soup.find('div', class_='deck_line')
-        if deck_div:
-            decklist_text = deck_div.get_text("\n")
+    # --- New Deck Name Logic ---
+    deck_name = deck_url # Default to URL
+    try:
+        deck_name_element_container = soup.find('div', class_='w_title')
+        if deck_name_element_container:
+            event_title_divs = deck_name_element_container.find_all('div', class_='event_title', recursive=False)
+            if len(event_title_divs) > 1 and event_title_divs[1]:
+                # Try to get text before " - " which usually precedes player name
+                raw_name_text = event_title_divs[1].get_text(separator=' ', strip=True)
+                # Split at " - " which often separates archetype from player
+                parts = raw_name_text.split(" - ", 1)
+                potential_name = parts[0]
+                # Clean up ranking like "#1 ", "3-4. " etc.
+                cleaned_name = re.sub(r'^#?\d+(?:-\d+)?\s*[\.\-]?\s*', '', potential_name).strip()
+                if cleaned_name:
+                    deck_name = cleaned_name
+                else:
+                    print(f"Warning: Deck name parsing (cleaned) resulted in empty string for {deck_url}. Defaulting to URL.")
+            else:
+                print(f"Warning: Could not find specific deck name structure (second event_title) for {deck_url}. Defaulting to URL.")
         else:
-            # Fallback: try to extract from the table as text
-            table = soup.find('table', class_='Stable')
-            if table:
-                decklist_text = "\n".join(row.get_text(" ", strip=True) for row in table.find_all('tr'))
+            print(f"Warning: Could not find w_title container for deck name for {deck_url}. Defaulting to URL.")
+    except Exception as e:
+        print(f"Error parsing deck name for {deck_url}: {e}. Defaulting to URL.")
 
-    # Now parse the decklist text
+
+    # --- New Commander Names Logic ---
     commander_names = []
+    try:
+        card_list_columns = soup.find_all('div', style=lambda x: x and 'flex:1' in x and 'margin:3px' in x)
+        if not card_list_columns:
+            card_list_columns = [soup] # Fallback: search the whole document
+
+        for column in card_list_columns:
+            o14_headers = column.find_all('div', class_='O14')
+            for header_div in o14_headers:
+                if header_div.get_text(strip=True).upper() == "COMMANDER":
+                    current_element = header_div.find_next_sibling()
+                    while current_element:
+                        if current_element.name == 'div' and 'O14' in current_element.get('class', []):
+                            break # Next section
+                        if current_element.name == 'div' and 'deck_line' in current_element.get('class', []):
+                            card_name_span = current_element.find('span', class_='L14')
+                            card_name_text = card_name_span.get_text(strip=True) if card_name_span else ''
+                            
+                            # Get quantity - usually the text node before the span or first text node
+                            quantity_str = ''
+                            if current_element.contents:
+                                first_content = str(current_element.contents[0]).strip()
+                                if first_content.isdigit(): # Check if the first part is a number
+                                    quantity_str = first_content
+                            
+                            if quantity_str == "1" and card_name_text:
+                                commander_names.append(card_name_text)
+                        current_element = current_element.find_next_sibling()
+                    if commander_names: break # Found in this column
+            if commander_names: break # Found in one of the columns
+        if not commander_names:
+            print(f"Warning: No commanders found for {deck_url} using new parsing method.")
+    except Exception as e:
+        print(f"Error parsing commanders for {deck_url}: {e}")
+
+    # --- New All Cards Logic ---
     cards = []
-    in_commander_section = False
+    try:
+        all_deck_lines = soup.find_all('div', class_='deck_line')
+        for line_div in all_deck_lines:
+            card_name_span = line_div.find('span', class_='L14')
+            card_name_text = card_name_span.get_text(strip=True) if card_name_span else ''
+            
+            quantity_str = ''
+            # Iterate through contents to find quantity more reliably
+            for content_node in line_div.contents:
+                if isinstance(content_node, str): # NavigableString
+                    potential_qty = content_node.strip()
+                    if potential_qty.isdigit():
+                        quantity_str = potential_qty
+                        break # Found quantity
 
-    for line in decklist_text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        if re.match(r'^COMMANDER', line, re.IGNORECASE):
-            in_commander_section = True
-            continue
-        elif in_commander_section and re.match(r'^[A-Z ]+$', line) and not line.startswith("COMMANDER"):
-            # Section header, end of commander section
-            in_commander_section = False
-        if in_commander_section:
-            m = re.match(r'^(\d+)\s+(.+)$', line)
-            if m and m.group(1) == "1":
-                commander_names.append(m.group(2))
-        # Always parse cards
-        m = re.match(r'^(\d+)\s+(.+)$', line)
-        if m:
-            cards.append({"name": m.group(2), "quantity": int(m.group(1))})
+            if card_name_text and quantity_str.isdigit():
+                cards.append({"name": card_name_text, "quantity": int(quantity_str)})
+            elif card_name_text: # If quantity parsing failed but name exists, assume 1 (or log warning)
+                 cards.append({"name": card_name_text, "quantity": 1}) # Default quantity or handle error
+                 print(f"Warning: Quantity not found for card '{card_name_text}' in {deck_url}, defaulting to 1.")
 
-    print(f"Deck: {deck_name} | Commanders: {commander_names}")
+
+        if not cards:
+            print(f"Warning: No cards parsed for {deck_url} using new method.")
+    except Exception as e:
+        print(f"Error parsing all cards for {deck_url}: {e}")
+        
+    # Fallback to old text-based parsing if new method yields no cards,
+    # but this is less likely to be useful if HTML structure changed significantly.
+    # Consider removing old decklist_text logic entirely if new one is meant to be comprehensive.
+    # For now, the new 'all_deck_lines' logic above should be the primary source for 'cards'.
+
+    print(f"Deck: {deck_name} | Commanders: {commander_names}") # Keep this for logging
     return {
         "name": deck_name,
         "commanders": commander_names,
-        "cards": cards,
-        "placement": None,
+        "cards": cards, # Populated by new 'all_deck_lines' logic
+        "placement": None, # This was never parsed, remains None
         "url": deck_url
     }
 
