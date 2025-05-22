@@ -207,8 +207,3 @@ async def get_top_commanders(db: AsyncSession = Depends(get_db)):
             ]
         })
     return data
-
-# app/frontend/login.js
-// When logging in, send { username: email, password }
-formData.append('username', email.value); // Use email as username
-formData.append('password', password.value);
