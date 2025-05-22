@@ -92,6 +92,10 @@ export default {
   async register(userData) {
     // userData: { username, email, password }
     return apiClient.post('/users/', userData);
-  }
+  },
+
+  async getTopCommanders() {
+    return apiClient.get('/meta/top-commanders');
+  },
   // You can add other API calls here (e.g., register, updateCollectionItem, deleteCollectionItem)
 };
