@@ -191,6 +191,40 @@ async def save_deck_to_db(event_data, deck_data):
         await session.commit()
 
 async def main():
+    # Define generic tournament details for archetype decks
+    generic_tournament_details = {
+        "name": "cEDH Archetype Data",
+        "date": None,  # MetaTournament.date is nullable
+        "url": "N/A"   # Or a relevant placeholder URL
+    }
+
+    # Get or create the generic tournament entry for archetype decks
+    archetype_event_tournament_orm = None
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            sa.select(MetaTournament).where(
+                MetaTournament.name == generic_tournament_details['name'],
+                MetaTournament.date == generic_tournament_details['date'] # Comparing None with None works
+            )
+        )
+        archetype_event_tournament_orm = result.scalars().first()
+
+        if not archetype_event_tournament_orm:
+            print(f"Creating generic tournament: {generic_tournament_details['name']}")
+            archetype_event_tournament_orm = MetaTournament(
+                name=generic_tournament_details['name'],
+                date=generic_tournament_details['date'],
+                url=generic_tournament_details['url']
+            )
+            session.add(archetype_event_tournament_orm)
+            await session.commit()
+            await session.refresh(archetype_event_tournament_orm)
+        else:
+            print(f"Found existing generic tournament: {archetype_event_tournament_orm.name}")
+
+    # Prepare event_data structure for save_deck_to_db using the generic details
+    event_data_for_archetypes = generic_tournament_details
+
     event_links = get_cedh_event_links()
     for event_url in event_links:
         event_data = parse_event(event_url)
@@ -211,8 +245,8 @@ async def main():
             deck_data = parse_deck(deck_url)
             if not deck_data:
                 continue
-            # You may want to create a fake event_data or skip DB save if you only want to print
-            print(f"Commander deck: {deck_data['name']} | Commanders: {deck_data['commanders']}")
+            await save_deck_to_db(event_data_for_archetypes, deck_data)
+            print(f"Saving deck from archetype {commander_url}: {deck_data['name']} | Commanders: {deck_data['commanders']}")
 
 if __name__ == "__main__":
     asyncio.run(main())
