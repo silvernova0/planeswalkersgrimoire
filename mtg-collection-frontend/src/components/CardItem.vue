@@ -79,24 +79,52 @@ function handleLocalImageError() {
 </script>
 
 <style scoped>
+.card-item {
+  background-color: #fff; /* Light mode background */
+  border-radius: 12px;
+  padding: 1rem; /* Or adjust as needed */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Softer than global .card for individual items unless it should match global .card */
+  margin-bottom: 1rem; /* Example spacing */
+}
+
+@media (prefers-color-scheme: dark) {
+  .card-item {
+    background-color: #2f2f2f; /* Dark mode background, similar to global .card */
+  }
+}
+
 .card-image, .card-image-fallback {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 8px; /* Rounded images within the card item */
 }
 .no-image-available {
   width: 100px; /* Adjust as needed */
   height: 140px; /* Adjust as needed */
-  background-color: #eee;
+  background-color: #eee; /* Light mode placeholder background */
   display: flex;
   align-items: center;
   justify-content: center;
   color: #777;
   border-radius: 8px;
 }
+
+@media (prefers-color-scheme: dark) {
+  .no-image-available {
+    background-color: #3a3a3a; /* Dark mode placeholder background */
+    color: #aaa;
+  }
+}
+
 .placeholder-image .text-xs {
   font-size: 0.75rem;
   text-align: center;
-  color: #555;
+  color: #555; /* Light mode text */
+}
+
+@media (prefers-color-scheme: dark) {
+  .placeholder-image .text-xs {
+    color: #bbb; /* Dark mode text */
+  }
 }
 </style>
