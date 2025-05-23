@@ -1,24 +1,22 @@
 # edhrec_scraper/db_manager.py
 import psycopg2
 from psycopg2 import extras # For extras.execute_values
-# We'll need to create a config.py file next for these imports
-# from .config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
+# MODIFIED: Import specific variables from .config
+from .config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from datetime import datetime
 
-# --- Database Connection ---
-# Placeholder for DB config until config.py is populated
-# In a real setup, these would come from config.py or environment variables
-DB_CONFIG = {
-    "dbname": "your_planeswalkersgrimoire_db", # Replace with your actual DB name
-    "user": "your_postgres_user",       # Replace with your actual user
-    "password": "your_postgres_password", # Replace with your actual password
-    "host": "localhost",                # Replace if your DB is not local
-    "port": "5432"                      # Standard PostgreSQL port
-}
+# REMOVED: The direct DB_CONFIG dictionary is no longer here.
 
 def get_db_connection():
     """Establishes and returns a PostgreSQL database connection."""
-    conn = psycopg2.connect(**DB_CONFIG)
+    # MODIFIED: Uses imported config variables
+    conn = psycopg2.connect(
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        host=DB_HOST,
+        port=DB_PORT
+    )
     return conn
 
 def get_card_id_by_name(cursor, card_name: str) -> int | None:
