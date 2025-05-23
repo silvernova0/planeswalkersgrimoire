@@ -39,6 +39,8 @@ const logout = () => {
   padding: 2rem 1rem 1rem 1rem;
   box-shadow: 2px 0 8px rgba(0,0,0,0.08);
   z-index: 100;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 .navbar-title {
   font-size: 1.3em;
@@ -56,7 +58,7 @@ const logout = () => {
   transition: color 0.2s;
   width: 100%;
   padding: 0.5em 0.8em;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 .nav-link:hover, .router-link-exact-active {
   background: #ffd700;
@@ -71,7 +73,7 @@ const logout = () => {
   padding: 0.7rem 1.2rem;
   cursor: pointer;
   font-weight: bold;
-  border-radius: 4px;
+  border-radius: 8px;
   width: 100%;
   transition: background 0.2s;
 }

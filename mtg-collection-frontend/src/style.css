@@ -13,6 +13,35 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Input fields, textarea, and select styling */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="search"],
+textarea,
+select {
+  border-radius: 8px;
+  border: 1px solid #444; /* Default for dark mode */
+  padding: 0.6em 1em;
+  background-color: #1a1a1a; /* Dark mode background */
+  color: rgba(255, 255, 255, 0.87); /* Dark mode text */
+  transition: border-color 0.25s, box-shadow 0.25s;
+  font-family: inherit;
+  font-size: 1em;
+  line-height: 1.5;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #646cff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.25);
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -44,10 +73,12 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, box-shadow 0.25s; /* Added box-shadow transition */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Added subtle box-shadow */
 }
 button:hover {
   border-color: #646cff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Enhanced box-shadow on hover */
 }
 button:focus,
 button:focus-visible {
@@ -56,6 +87,9 @@ button:focus-visible {
 
 .card {
   padding: 2em;
+  border-radius: 12px; /* More rounded corners */
+  background-color: #2f2f2f; /* Dark mode background for card */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Card shadow */
 }
 
 #app {
@@ -75,5 +109,30 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+    /* box-shadow remains subtle, consider adjusting if too light on light bg */
+  }
+  /* Light mode for inputs */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="search"],
+  textarea,
+  select {
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+    color: #213547;
+  }
+  input[type="text"]:focus,
+  input[type="password"]:focus,
+  input[type="email"]:focus,
+  input[type="search"]:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #747bff; /* Lighter focus color for light mode */
+    box-shadow: 0 0 0 3px rgba(116, 123, 255, 0.25); /* Lighter focus ring */
+  }
+  .card {
+    background-color: #ffffff; /* Light mode background for card */
+    /* box-shadow can remain the same or be adjusted if needed for light theme */
   }
 }

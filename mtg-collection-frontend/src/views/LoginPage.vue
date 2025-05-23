@@ -48,9 +48,45 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.login-page { display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
-.login-form div { margin-bottom: 10px; }
-.login-form label { margin-right: 5px; }
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem auto; /* Centering with some top/bottom margin */
+  padding: 2rem;
+  background-color: #fff; /* Light mode background */
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-width: 400px; /* Or appropriate width */
+}
+
+@media (prefers-color-scheme: dark) {
+  .login-page {
+    background-color: #2d3748; /* A common dark background, adjust as needed */
+    /* Text colors for inputs and labels should ideally be handled by global styles or inherit correctly.
+       If not, they might need specific overrides here for dark mode. */
+  }
+  .login-page h2 { /* Example if h2 needs color adjustment for dark mode */
+    color: rgba(255, 255, 255, 0.87);
+  }
+   .login-page label { /* Example if labels need color adjustment for dark mode */
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .login-page .error-message {
+    color: #f9a9a9; /* Lighter red for dark mode */
+  }
+  .login-page a {
+    color: #8cb4ff; /* Lighter blue for links in dark mode */
+  }
+  .login-page a:hover {
+    color: #a7c7ff;
+  }
+}
+
+.login-form div { margin-bottom: 10px; width: 100%; } /* Ensure form elements take width */
+.login-form label { margin-right: 5px; display: block; margin-bottom: 0.3em; text-align: left; } /* Align labels left */
 .error-message { color: red; margin-top: 10px; }
-button { margin-top: 10px; padding: 8px 15px; }
+/* Buttons and inputs should pick up global styles */
+button { margin-top: 10px; padding: 8px 15px; width: 100%;} /* Make button full width */
+input[type="text"], input[type="password"] { width: 100%; box-sizing: border-box; } /* Make inputs full width */
 </style>
