@@ -5,7 +5,7 @@ from functools import lru_cache
 class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str = "your_default_secret_key_please_change_in_env" # Should be overridden by .env
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30 # Default to 30 minutes
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 5256000 # Default to 30 minutes
 
     class Config:
         env_file = ".env" # Specifies the .env file to load variables from
