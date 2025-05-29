@@ -284,5 +284,4 @@
         </div>
       </div>
     </div>
-  </div> <!-- This is the matching closing div for the root div -->
 </template>
